@@ -1,0 +1,26 @@
+app = 'sisyphus-backend'
+primary_region = 'sjc'
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[checks]
+  [checks.health]
+    port = 3000
+    type = "http"
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "30s"
+    path = "/"
+    method = "GET"
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'
+  count = 1

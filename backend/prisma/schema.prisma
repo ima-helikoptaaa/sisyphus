@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  firebaseUid String   @unique @map("firebase_uid")
+  email       String   @unique
+  displayName String?  @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  splits   WorkoutSplit[]
+  sessions WorkoutSession[]
+  dailyLogs DailyLog[]
+
+  @@map("users")
+}
+
+model WorkoutSplit {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  emoji     String   @default("\ud83d\udcaa")
+  color     String   @default("#C8E64E")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises Exercise[]
+  sessions  WorkoutSession[]
+
+  @@index([userId])
+  @@map("workout_splits")
+}
+
+model Exercise {
+  id           String   @id @default(cuid())
+  splitId      String   @map("split_id")
+  name         String
+  muscleGroup  String?  @map("muscle_group")
+  exerciseType String   @default("weighted") @map("exercise_type")
+  notes        String?
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  split        WorkoutSplit  @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  exerciseLogs ExerciseLog[]
+
+  @@index([splitId])
+  @@map("exercises")
+}
+
+model WorkoutSession {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  splitId     String    @map("split_id")
+  date        DateTime  @db.Date
+  notes       String?
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  split        WorkoutSplit   @relation(fields: [splitId], references: [id])
+  exerciseLogs ExerciseLog[]
+
+  @@index([userId])
+  @@index([userId, completedAt])
+  @@index([splitId])
+  @@map("workout_sessions")
+}
+
+model ExerciseLog {
+  id         String   @id @default(cuid())
+  sessionId  String   @map("session_id")
+  exerciseId String   @map("exercise_id")
+  sortOrder  Int      @default(0) @map("sort_order")
+  skipped    Boolean  @default(false)
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id])
+  sets     SetLog[]
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("exercise_logs")
+}
+
+model SetLog {
+  id            String   @id @default(cuid())
+  exerciseLogId String   @map("exercise_log_id")
+  setNumber     Int      @map("set_number")
+  weight        Float?
+  reps          Int?
+  durationSecs  Int?     @map("duration_secs")
+  rpe           Float?
+  isWarmup      Boolean  @default(false) @map("is_warmup")
+  isDropset     Boolean  @default(false) @map("is_dropset")
+  bodyWeightModifier Float? @map("body_weight_modifier")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  exerciseLog ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
+
+  @@index([exerciseLogId])
+  @@map("set_logs")
+}
+
+model DailyLog {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  date         DateTime @db.Date
+  weightKg     Float?   @map("weight_kg")
+  proteinG     Float?   @map("protein_g")
+  caloriesKcal Float?   @map("calories_kcal")
+  waterMl      Float?   @map("water_ml")
+  sleepHours   Float?   @map("sleep_hours")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("body_logs")
+}
