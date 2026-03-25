@@ -15,7 +15,6 @@ GoogleService-Info.plist
 
 # Prisma
 prisma/*.db
-prisma/migrations/
 
 # Xcode
 build/
