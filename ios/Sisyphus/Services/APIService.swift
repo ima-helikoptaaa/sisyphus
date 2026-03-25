@@ -37,9 +37,7 @@ struct APIErrorResponse: Codable {
 final class APIService {
     static let shared = APIService()
 
-    private var baseURL: String {
-        UserDefaults.standard.string(forKey: "api_base_url") ?? "https://sisyphus-backend.fly.dev"
-    }
+    private let baseURL = "http://13.214.26.96/api/sisyphus"
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()

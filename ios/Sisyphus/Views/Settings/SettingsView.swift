@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("api_base_url") private var apiBaseURL = "http://localhost:3000"
+    @AppStorage("api_base_url") private var apiBaseURL = "http://13.214.26.96/api/sisyphus"
     @AppStorage("default_rest_timer") private var defaultRestTimer = 90
     @AppStorage("weight_unit") private var weightUnit = "kg"
     @State private var showingURLEditor = false
@@ -123,7 +123,7 @@ struct SettingsView: View {
                 }
             }
             Button("Reset") {
-                apiBaseURL = "http://localhost:3000"
+                apiBaseURL = "http://13.214.26.96/api/sisyphus"
             }
             Button("Cancel", role: .cancel) {}
         } message: {
