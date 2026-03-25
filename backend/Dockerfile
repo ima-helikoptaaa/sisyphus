@@ -19,7 +19,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY --from=deps /app/prisma ./prisma
+COPY --from=build /app/prisma ./prisma
 COPY start.sh ./start.sh
 RUN chmod +x start.sh
 
