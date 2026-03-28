@@ -24,6 +24,11 @@ struct SisyphusApp: App {
                 }
             }
             .preferredColorScheme(.dark)
+            .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
+                if !isAuthenticated {
+                    workoutViewModel.reset()
+                }
+            }
         }
     }
 

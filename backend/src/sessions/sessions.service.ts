@@ -119,7 +119,11 @@ export class SessionsService {
       select: { date: true, userId: true },
     });
 
-    if (beforeSession && beforeSession.userId !== userId) {
+    if (!beforeSession) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (beforeSession.userId !== userId) {
       throw new ForbiddenException('You do not own this session');
     }
 
@@ -128,9 +132,7 @@ export class SessionsService {
         userId,
         splitId,
         completedAt: { not: null },
-        ...(beforeSession
-          ? { date: { lt: beforeSession.date } }
-          : {}),
+        date: { lt: beforeSession.date },
       },
       include: this.sessionInclude,
       orderBy: { date: 'desc' },
@@ -253,8 +255,8 @@ export class SessionsService {
     return this.prisma.exerciseLog.create({
       data: {
         sessionId,
-        exerciseId: dto.exercise_id,
-        sortOrder: dto.sort_order,
+        exerciseId: dto.exerciseId,
+        sortOrder: dto.sortOrder,
       },
       include: this.exerciseLogInclude,
     });
@@ -290,8 +292,8 @@ export class SessionsService {
     if (dto.skipped !== undefined) {
       data.skipped = dto.skipped;
     }
-    if (dto.sort_order !== undefined) {
-      data.sortOrder = dto.sort_order;
+    if (dto.sortOrder !== undefined) {
+      data.sortOrder = dto.sortOrder;
     }
 
     return this.prisma.exerciseLog.update({

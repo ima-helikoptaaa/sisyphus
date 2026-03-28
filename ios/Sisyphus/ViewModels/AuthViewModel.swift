@@ -12,6 +12,7 @@ final class AuthViewModel: ObservableObject {
 
     init() {
         observeAuthState()
+        observeUnauthorized()
     }
 
     private func observeAuthState() {
@@ -19,6 +20,18 @@ final class AuthViewModel: ObservableObject {
             Task { @MainActor in
                 self?.user = user
                 self?.isAuthenticated = user != nil
+            }
+        }
+    }
+
+    private func observeUnauthorized() {
+        NotificationCenter.default.addObserver(
+            forName: .unauthorizedResponse,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.signOut()
             }
         }
     }

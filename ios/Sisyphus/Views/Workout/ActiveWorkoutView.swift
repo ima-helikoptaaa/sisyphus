@@ -34,6 +34,14 @@ struct ActiveWorkoutView: View {
                                         .font(.system(size: 13))
                                         .foregroundColor(SisyphusTheme.destructive)
                                     Spacer()
+                                    Button(action: {
+                                        viewModel.errorMessage = nil
+                                        Task { await viewModel.loadSessionDetail() }
+                                    }) {
+                                        Text("Retry")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(SisyphusTheme.accent)
+                                    }
                                     Button(action: { viewModel.errorMessage = nil }) {
                                         Image(systemName: "xmark")
                                             .font(.system(size: 12, weight: .semibold))

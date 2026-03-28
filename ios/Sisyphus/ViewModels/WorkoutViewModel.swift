@@ -258,7 +258,8 @@ final class WorkoutViewModel: ObservableObject {
 
     func startRestTimer(duration: Int? = nil) {
         stopRestTimer()
-        restTimerTotal = duration ?? restTimerTotal
+        let defaultDuration = UserDefaults.standard.integer(forKey: "default_rest_timer")
+        restTimerTotal = duration ?? (defaultDuration > 0 ? defaultDuration : 90)
         restTimerSeconds = restTimerTotal
         isRestTimerRunning = true
 
@@ -303,6 +304,18 @@ final class WorkoutViewModel: ObservableObject {
     private func triggerHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.impactOccurred()
+    }
+
+    func reset() {
+        currentSession = nil
+        exerciseLogs = []
+        previousLogs = [:]
+        isActive = false
+        elapsedSeconds = 0
+        errorMessage = nil
+        isLoading = false
+        stopElapsedTimer()
+        stopRestTimer()
     }
 
     func previousSetsForExercise(exerciseId: String) -> [SetLog] {

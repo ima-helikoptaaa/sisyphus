@@ -32,9 +32,10 @@ struct SetLog: Codable, Identifiable {
     }
 
     var displayText: String {
+        let unit = UserDefaults.standard.string(forKey: "weight_unit") ?? "kg"
         var parts: [String] = []
         if let w = weight {
-            parts.append("\(w.cleanString)kg")
+            parts.append("\(w.cleanString)\(unit)")
         }
         if let r = reps {
             parts.append("\(r) reps")

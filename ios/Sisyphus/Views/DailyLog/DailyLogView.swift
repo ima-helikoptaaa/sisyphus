@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DailyLogView: View {
     @StateObject private var viewModel = DailyLogViewModel()
+    @AppStorage("weight_unit") private var weightUnit = "kg"
     @FocusState private var focusedField: Field?
 
     enum Field: Hashable {
@@ -39,7 +40,7 @@ struct DailyLogView: View {
                         iconColor: .purple,
                         title: "Body Weight",
                         value: $viewModel.weightInput,
-                        unit: "kg",
+                        unit: weightUnit,
                         placeholder: "0",
                         field: .weight
                     )
@@ -135,6 +136,7 @@ struct DailyLogView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
+            .disabled(viewModel.isSaving)
 
             if viewModel.isLoading && viewModel.todayLog == nil {
                 ProgressView()

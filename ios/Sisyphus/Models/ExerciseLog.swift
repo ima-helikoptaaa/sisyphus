@@ -97,21 +97,9 @@ struct ExerciseLog: Codable, Identifiable {
 struct CreateExerciseLogRequest: Codable {
     let exerciseId: String
     let sortOrder: Int
-
-    // Backend exercise-log.dto expects snake_case: exercise_id, sort_order
-    enum CodingKeys: String, CodingKey {
-        case exerciseId = "exercise_id"
-        case sortOrder = "sort_order"
-    }
 }
 
 struct UpdateExerciseLogRequest: Codable {
     let skipped: Bool?
     let sortOrder: Int?
-
-    // Backend exercise-log.dto expects: skipped, sort_order
-    enum CodingKeys: String, CodingKey {
-        case skipped
-        case sortOrder = "sort_order"
-    }
 }

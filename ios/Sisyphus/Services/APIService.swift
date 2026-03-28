@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let unauthorizedResponse = Notification.Name("unauthorizedResponse")
+}
+
 enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
@@ -37,7 +41,11 @@ struct APIErrorResponse: Codable {
 final class APIService {
     static let shared = APIService()
 
-    private let baseURL = "http://13.214.26.96/api/sisyphus"
+    private static let defaultBaseURL = "http://13.214.26.96/api/sisyphus"
+
+    private var baseURL: String {
+        UserDefaults.standard.string(forKey: "api_base_url") ?? Self.defaultBaseURL
+    }
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -114,12 +122,13 @@ final class APIService {
         }
 
         if httpResponse.statusCode == 401 {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .unauthorizedResponse, object: nil)
+            }
             throw APIError.unauthorized
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            print("⚠️ HTTP \(httpResponse.statusCode) for \(request.url?.absoluteString ?? "?")")
-            print("⚠️ Response body: \(String(data: data, encoding: .utf8) ?? "nil")")
             let errorResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
             throw APIError.httpError(
                 statusCode: httpResponse.statusCode,
@@ -151,6 +160,9 @@ final class APIService {
         }
 
         if httpResponse.statusCode == 401 {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .unauthorizedResponse, object: nil)
+            }
             throw APIError.unauthorized
         }
 

@@ -1,11 +1,12 @@
-import { IsString, IsOptional, IsBoolean, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
 
 export class CreateExerciseLogDto {
   @IsString()
-  exercise_id: string;
+  exerciseId: string;
 
   @IsInt()
-  sort_order: number;
+  @Min(0)
+  sortOrder: number;
 }
 
 export class UpdateExerciseLogDto {
@@ -15,5 +16,6 @@ export class UpdateExerciseLogDto {
 
   @IsOptional()
   @IsInt()
-  sort_order?: number;
+  @Min(0)
+  sortOrder?: number;
 }
