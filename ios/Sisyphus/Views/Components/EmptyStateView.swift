@@ -35,12 +35,15 @@ struct EmptyStateView: View {
                         .background(SisyphusTheme.accent)
                         .cornerRadius(SisyphusTheme.buttonRadius)
                 }
+                .accessibilityLabel(actionTitle)
                 .padding(.top, 8)
             }
 
             Spacer()
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(subtitle)")
     }
 }
 

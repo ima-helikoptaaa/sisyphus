@@ -103,6 +103,9 @@ struct ExerciseLogCard: View {
                     }
                 }
             }
+            .accessibilityLabel(exerciseLog.exerciseName ?? "Exercise")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand")")
 
             Spacer()
 
@@ -123,6 +126,7 @@ struct ExerciseLogCard: View {
                     .font(.system(size: 14))
                     .foregroundColor(exerciseLog.isSkipped ? SisyphusTheme.warning : SisyphusTheme.textTertiary)
             }
+            .accessibilityLabel(exerciseLog.isSkipped ? "Unskip exercise" : "Skip exercise")
             .padding(.leading, 8)
         }
         .padding(16)
@@ -178,6 +182,7 @@ struct ExerciseLogCard: View {
                         .foregroundColor(SisyphusTheme.accent)
                 }
                 .disabled(!canAddSet)
+                .accessibilityLabel("Add set")
             }
 
             // Options row

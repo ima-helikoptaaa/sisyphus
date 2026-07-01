@@ -95,6 +95,9 @@ struct LoginView: View {
                     }
                     .offset(y: animateButton ? 0 : 30)
                     .opacity(animateButton ? 1 : 0)
+                    .accessibilityLabel("Continue with Google")
+                    .accessibilityHint("Double tap to sign in with Google")
+                    .accessibilityAddTraits(.isButton)
 
                     Text("By continuing, you agree to our Terms of Service")
                         .font(.system(size: 12))

@@ -46,6 +46,8 @@ struct HomeView: View {
                     .clipShape(Circle())
                     .shadow(color: SisyphusTheme.accent.opacity(0.3), radius: 8, y: 4)
             }
+            .accessibilityLabel("New workout split")
+            .accessibilityHint("Double tap to create a new workout split")
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }

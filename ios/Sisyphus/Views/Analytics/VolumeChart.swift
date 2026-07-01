@@ -52,6 +52,8 @@ struct VolumeChart: View {
                 }
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Workout frequency chart, \(data.count) days with \(data.reduce(0) { $0 + $1.count }) total workouts")
     }
 }
 

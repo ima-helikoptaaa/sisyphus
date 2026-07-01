@@ -47,6 +47,9 @@ struct SisyphusButton: View {
             .opacity(isDisabled ? 0.5 : 1.0)
         }
         .disabled(isLoading || isDisabled)
+        .accessibilityLabel(title)
+        .accessibilityHint(isLoading ? "Loading" : "")
+        .accessibilityAddTraits(isDisabled ? [] : .isButton)
     }
 
     private var backgroundColor: Color {

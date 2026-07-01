@@ -123,6 +123,8 @@ struct SummaryCard: View {
                     .foregroundColor(SisyphusTheme.textSecondary)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

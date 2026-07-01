@@ -87,6 +87,7 @@ struct RestTimerView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(SisyphusTheme.textSecondary)
                 }
+                .accessibilityLabel("Skip rest timer")
             }
         }
     }

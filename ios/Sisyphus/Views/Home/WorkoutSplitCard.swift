@@ -41,6 +41,10 @@ struct WorkoutSplitCard: View {
                     .foregroundColor(SisyphusTheme.textTertiary)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(split.emoji) \(split.name), \(split.exerciseCount ?? 0) exercises")
+        .accessibilityHint("Double tap to view split details")
+        .accessibilityAddTraits(.isButton)
     }
 }
 

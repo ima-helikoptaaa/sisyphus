@@ -147,6 +147,8 @@ struct ActiveWorkoutView: View {
                     .foregroundColor(SisyphusTheme.textSecondary)
                     .frame(width: 36, height: 36)
             }
+            .accessibilityLabel("Minimize workout")
+            .accessibilityHint("Double tap to minimize and return to home")
 
             Spacer()
 
@@ -168,6 +170,8 @@ struct ActiveWorkoutView: View {
                     .foregroundColor(SisyphusTheme.destructive)
                     .frame(width: 36, height: 36)
             }
+            .accessibilityLabel("Discard workout")
+            .accessibilityHint("Double tap to discard this workout without saving")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -238,6 +242,7 @@ struct ActiveWorkoutView: View {
                             )
                     )
                 }
+                .accessibilityLabel(viewModel.isRestTimerRunning ? "Stop rest timer" : "Start rest timer")
 
                 Spacer()
 
@@ -255,6 +260,8 @@ struct ActiveWorkoutView: View {
                     .background(SisyphusTheme.accent)
                     .cornerRadius(SisyphusTheme.buttonRadius)
                 }
+                .accessibilityLabel("Finish workout")
+                .accessibilityHint("Double tap to finish and save this workout")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
