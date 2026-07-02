@@ -54,12 +54,31 @@ struct AnalyticsDashboardView: View {
 
                     // Personal Records
                     if !viewModel.personalRecords.isEmpty {
-                        PersonalRecordsView(records: viewModel.personalRecords)
+                        PersonalRecordsView(
+                            records: viewModel.personalRecords,
+                            onExerciseSelected: { exerciseId in
+                                Task { await viewModel.loadExerciseProgress(exerciseId: exerciseId) }
+                            }
+                        )
                     }
 
-                    // Exercise Progress (if selected)
-                    if !viewModel.exerciseProgress.isEmpty {
+                    // Exercise Progress — tap a PR to see progress chart
+                    if let selectedId = viewModel.selectedExerciseId, !viewModel.exerciseProgress.isEmpty {
                         ExerciseProgressChart(data: viewModel.exerciseProgress)
+                    } else if !viewModel.personalRecords.isEmpty {
+                        SisyphusCard {
+                            VStack(spacing: 12) {
+                                Text("Exercise Progress")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(SisyphusTheme.textPrimary)
+                                Text("Tap a personal record above to view its progress over time")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(SisyphusTheme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -79,6 +98,9 @@ struct AnalyticsDashboardView: View {
         .navigationBarTitleDisplayMode(.large)
         .task {
             await viewModel.loadAllData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dataChanged)) { _ in
+            Task { await viewModel.loadAllData() }
         }
     }
 

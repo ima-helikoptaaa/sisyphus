@@ -18,6 +18,8 @@ final class WorkoutViewModel: ObservableObject {
     private let sessionService = SessionService.shared
     private var elapsedTimer: Timer?
     private var restTimer: Timer?
+    private var pausedAt: Date?
+    private var backgroundTime: Date?
 
     var elapsedTimeFormatted: String {
         let hours = elapsedSeconds / 3600
@@ -46,6 +48,12 @@ final class WorkoutViewModel: ObservableObject {
 
     var totalSets: Int {
         exerciseLogs.reduce(0) { $0 + ($1.sets?.count ?? 0) }
+    }
+
+    var workingSets: Int {
+        exerciseLogs.reduce(0) { total, log in
+            total + (log.sets?.filter { !$0.isWarmup }.count ?? 0)
+        }
     }
 
     func startWorkout(splitId: String) async -> Bool {
@@ -146,6 +154,13 @@ final class WorkoutViewModel: ObservableObject {
             startRestTimer()
 
             checkForPR(exerciseLogId: exerciseLogId, setLog: setLog)
+        } catch let error as APIError {
+            if case .httpError(let code, _) = error, code == 409 {
+                await loadSessionDetail()
+                errorMessage = "Set conflict resolved. Please try again."
+            } else {
+                errorMessage = error.localizedDescription
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -257,9 +272,44 @@ final class WorkoutViewModel: ObservableObject {
 
     private func startElapsedTimer() {
         stopElapsedTimer()
+        recomputeElapsed()
         elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.elapsedSeconds += 1
+                self?.recomputeElapsed()
+            }
+        }
+    }
+
+    private func recomputeElapsed() {
+        guard let startedAt = currentSession?.startedAt else { return }
+        elapsedSeconds = Int(Date().timeIntervalSince(startedAt))
+    }
+
+    func handleEnterBackground() {
+        backgroundTime = Date()
+        elapsedTimer?.invalidate()
+        elapsedTimer = nil
+        restTimer?.invalidate()
+        restTimer = nil
+    }
+
+    func handleEnterForeground() {
+        if let _ = backgroundTime {
+            backgroundTime = nil
+            recomputeElapsed()
+            startElapsedTimer()
+            if isRestTimerRunning && restTimerSeconds > 0 {
+                restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                    Task { @MainActor in
+                        guard let self = self else { return }
+                        if self.restTimerSeconds > 0 {
+                            self.restTimerSeconds -= 1
+                        } else {
+                            self.stopRestTimer()
+                            self.triggerHaptic(.heavy)
+                        }
+                    }
+                }
             }
         }
     }

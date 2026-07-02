@@ -58,12 +58,7 @@ struct SetLogRow: View {
 
             // PR/improvement indicator
             ZStack {
-                if isImprovement {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(SisyphusTheme.success)
-                        .accessibilityLabel("Improvement over previous set")
-                } else if isPR {
+                if isPR {
                     Text("PR")
                         .font(.system(size: 10, weight: .black))
                         .foregroundColor(.black)
@@ -72,6 +67,11 @@ struct SetLogRow: View {
                         .background(SisyphusTheme.accent)
                         .cornerRadius(3)
                         .accessibilityLabel("Personal record")
+                } else if isImprovement {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(SisyphusTheme.success)
+                        .accessibilityLabel("Improvement over previous set")
                 }
             }
             .frame(width: 32)
@@ -120,26 +120,6 @@ struct SetLogRow: View {
 
     // MARK: - Comparison logic
 
-    private var isImprovement: Bool {
-        guard let prev = previousSet else { return false }
-        switch exerciseType {
-        case .weighted:
-            let currentWeight = setLog.weight ?? 0
-            let prevWeight = prev.weight ?? 0
-            let currentReps = setLog.reps ?? 0
-            let prevReps = prev.reps ?? 0
-            return (currentWeight > prevWeight) || (currentWeight == prevWeight && currentReps > prevReps)
-        case .bodyweight:
-            let currentReps = setLog.reps ?? 0
-            let prevReps = prev.reps ?? 0
-            return currentReps > prevReps
-        case .timed:
-            let currentDur = setLog.durationSecs ?? 0
-            let prevDur = prev.durationSecs ?? 0
-            return currentDur > prevDur
-        }
-    }
-
     private var isPR: Bool {
         guard let prev = previousSet else { return false }
         switch exerciseType {
@@ -148,13 +128,30 @@ struct SetLogRow: View {
             let prevWeight = prev.weight ?? 0
             return currentWeight > prevWeight && currentWeight > 0
         case .bodyweight:
+            return false
+        case .timed:
+            return false
+        }
+    }
+
+    private var isImprovement: Bool {
+        guard let prev = previousSet else { return false }
+        switch exerciseType {
+        case .weighted:
+            let currentWeight = setLog.weight ?? 0
+            let prevWeight = prev.weight ?? 0
             let currentReps = setLog.reps ?? 0
             let prevReps = prev.reps ?? 0
-            return currentReps > prevReps && currentReps > 0
+            if currentWeight > prevWeight { return false }
+            return currentWeight == prevWeight && currentReps > prevReps
+        case .bodyweight:
+            let currentReps = setLog.reps ?? 0
+            let prevReps = prev.reps ?? 0
+            return currentReps > prevReps
         case .timed:
             let currentDur = setLog.durationSecs ?? 0
             let prevDur = prev.durationSecs ?? 0
-            return currentDur > prevDur && currentDur > 0
+            return currentDur > prevDur
         }
     }
 

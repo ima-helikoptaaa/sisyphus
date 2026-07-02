@@ -67,7 +67,7 @@ final class AnalyticsViewModel: ObservableObject {
     func loadExerciseProgress(exerciseId: String) async {
         selectedExerciseId = exerciseId
         do {
-            exerciseProgress = try await analyticsService.getExerciseProgress(exerciseId: exerciseId)
+            exerciseProgress = try await analyticsService.getExerciseProgress(exerciseId: exerciseId, days: 90)
         } catch {
             errorMessage = error.localizedDescription
         }

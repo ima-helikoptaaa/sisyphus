@@ -5,6 +5,7 @@ import FirebaseCore
 struct SisyphusApp: App {
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var workoutViewModel = WorkoutViewModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         FirebaseApp.configure()
@@ -27,6 +28,16 @@ struct SisyphusApp: App {
             .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
                 if !isAuthenticated {
                     workoutViewModel.reset()
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                switch newPhase {
+                case .background:
+                    workoutViewModel.handleEnterBackground()
+                case .active:
+                    workoutViewModel.handleEnterForeground()
+                default:
+                    break
                 }
             }
         }

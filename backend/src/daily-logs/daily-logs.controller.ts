@@ -28,9 +28,10 @@ export class DailyLogsController {
   async findAll(
     @CurrentUser() user: User,
     @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query('endDate') endDateParam?: string,
   ) {
-    const end = endDate ? new Date(endDate + 'T23:59:59.999Z') : new Date();
+    const endDate = endDateParam ? new Date(endDateParam + 'T00:00:00.000Z') : null;
+    const end = endDate ? new Date(endDate.getTime() + 24 * 60 * 60 * 1000) : new Date();
     const start = startDate
       ? new Date(startDate + 'T00:00:00.000Z')
       : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);

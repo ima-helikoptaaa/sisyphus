@@ -6,6 +6,7 @@ struct SplitDetailView: View {
     @EnvironmentObject var workoutViewModel: WorkoutViewModel
     @State private var showingAddExercise = false
     @State private var showingActiveWorkout = false
+    @State private var showingActiveWorkoutAlert = false
     @State private var editingExercise: Exercise?
     @State private var isEditing = false
     @Environment(\.dismiss) private var dismiss
@@ -73,9 +74,13 @@ struct SplitDetailView: View {
                         isDisabled: viewModel.exercises.isEmpty
                     ) {
                         Task {
-                            let success = await workoutViewModel.startWorkout(splitId: splitId)
-                            if success {
-                                showingActiveWorkout = true
+                            if workoutViewModel.isActive {
+                                showingActiveWorkoutAlert = true
+                            } else {
+                                let success = await workoutViewModel.startWorkout(splitId: splitId)
+                                if success {
+                                    showingActiveWorkout = true
+                                }
                             }
                         }
                     }
@@ -133,6 +138,14 @@ struct SplitDetailView: View {
                 ActiveWorkoutView()
                     .environmentObject(workoutViewModel)
             }
+        }
+        .alert("Workout Already Active", isPresented: $showingActiveWorkoutAlert) {
+            Button("Resume Current") {
+                showingActiveWorkout = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You already have a workout in progress. Resume it or finish it before starting a new one.")
         }
         .task {
             await viewModel.loadSplit(id: splitId)

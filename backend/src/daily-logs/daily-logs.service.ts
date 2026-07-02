@@ -38,7 +38,7 @@ export class DailyLogsService {
     return this.prisma.dailyLog.findMany({
       where: {
         userId,
-        date: { gte: startDate, lte: endDate },
+        date: { gte: startDate, lt: endDate },
       },
       orderBy: { date: 'desc' },
     });

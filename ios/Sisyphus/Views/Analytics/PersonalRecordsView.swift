@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PersonalRecordsView: View {
     let records: [PersonalRecord]
+    var onExerciseSelected: ((String) -> Void)?
     @State private var expandedRecordId: String?
 
     var body: some View {
@@ -55,7 +56,6 @@ struct PersonalRecordsView: View {
                             .padding(16)
                         }
 
-                        // Expanded detail
                         if expandedRecordId == record.id {
                             Divider()
                                 .background(SisyphusTheme.cardBorder)
@@ -79,6 +79,21 @@ struct PersonalRecordsView: View {
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 8)
+
+                            if onExerciseSelected != nil {
+                                Button(action: { onExerciseSelected?(record.exerciseId) }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "chart.line.uptrend.xyaxis")
+                                            .font(.system(size: 14))
+                                        Text("View Progress")
+                                            .font(.system(size: 14, weight: .semibold))
+                                    }
+                                    .foregroundColor(SisyphusTheme.accent)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                    }
+                    .padding(.bottom, 12)
+                            }
                         }
                     }
                 }

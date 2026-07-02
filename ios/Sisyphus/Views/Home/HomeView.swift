@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @StateObject private var splitsViewModel = SplitsViewModel()
     @EnvironmentObject var workoutViewModel: WorkoutViewModel
     @State private var showingAddSplit = false
     @State private var showingActiveWorkout = false
@@ -82,8 +83,7 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showingAddSplit) {
             AddSplitSheet { name, emoji, color in
-                let splitVM = SplitsViewModel()
-                let error = await splitVM.createSplit(name: name, emoji: emoji, color: color)
+                let error = await splitsViewModel.createSplit(name: name, emoji: emoji, color: color)
                 if error == nil {
                     await viewModel.loadData()
                     NotificationCenter.default.post(name: .dataChanged, object: nil)

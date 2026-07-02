@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -58,13 +59,15 @@ export class SessionsService {
       if (filters.startDate) {
         const startDate = new Date(filters.startDate);
         if (!isNaN(startDate.getTime())) {
-          where.date.gte = startDate;
+          const normalized = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()));
+          where.date.gte = normalized;
         }
       }
       if (filters.endDate) {
         const endDate = new Date(filters.endDate);
         if (!isNaN(endDate.getTime())) {
-          where.date.lt = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
+          const normalized = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()));
+          where.date.lt = new Date(normalized.getTime() + 24 * 60 * 60 * 1000);
         }
       }
     }
@@ -80,7 +83,7 @@ export class SessionsService {
         },
       },
       orderBy: { date: 'desc' },
-      take: filters.limit || undefined,
+      take: Math.min(Math.max(filters.limit || 50, 1), 100),
     });
   }
 
@@ -125,10 +128,24 @@ export class SessionsService {
       },
       include: this.sessionInclude,
       orderBy: { date: 'desc' },
+      take: 1,
     });
   }
 
   async findPrevious(userId: string, splitId: string, beforeSessionId: string) {
+    const split = await this.prisma.workoutSplit.findUnique({
+      where: { id: splitId },
+      select: { userId: true },
+    });
+
+    if (!split) {
+      throw new NotFoundException('Split not found');
+    }
+
+    if (split.userId !== userId) {
+      throw new ForbiddenException('You do not own this split');
+    }
+
     const beforeSession = await this.prisma.workoutSession.findUnique({
       where: { id: beforeSessionId },
       select: { date: true, userId: true },
@@ -193,7 +210,7 @@ export class SessionsService {
 
     const sessionDate = dto.date ? new Date(dto.date) : new Date();
     if (isNaN(sessionDate.getTime())) {
-      throw new Error('Invalid date');
+      throw new BadRequestException('Invalid date');
     }
     const dateOnly = new Date(Date.UTC(sessionDate.getUTCFullYear(), sessionDate.getUTCMonth(), sessionDate.getUTCDate()));
 
@@ -279,6 +296,10 @@ export class SessionsService {
       throw new ForbiddenException('You do not own this session');
     }
 
+    if (session.completedAt) {
+      throw new BadRequestException('Cannot modify a completed session');
+    }
+
     const exercise = await this.prisma.exercise.findUnique({
       where: { id: dto.exerciseId },
       include: { split: { select: { id: true } } },
@@ -318,6 +339,10 @@ export class SessionsService {
 
     if (session.userId !== userId) {
       throw new ForbiddenException('You do not own this session');
+    }
+
+    if (session.completedAt) {
+      throw new BadRequestException('Cannot modify a completed session');
     }
 
     const exerciseLog = await this.prisma.exerciseLog.findUnique({
@@ -361,6 +386,10 @@ export class SessionsService {
       throw new ForbiddenException('You do not own this session');
     }
 
+    if (session.completedAt) {
+      throw new BadRequestException('Cannot modify a completed session');
+    }
+
     const exerciseLog = await this.prisma.exerciseLog.findUnique({
       where: { id: exerciseLogId },
     });
@@ -402,6 +431,10 @@ export class SessionsService {
 
     if (set.exerciseLog.session.userId !== userId) {
       throw new ForbiddenException('You do not own this set');
+    }
+
+    if (set.exerciseLog.session.completedAt) {
+      throw new BadRequestException('Cannot modify a completed session');
     }
 
     if (set.exerciseLog.sessionId !== sessionId) {
@@ -451,6 +484,10 @@ export class SessionsService {
       throw new ForbiddenException('You do not own this set');
     }
 
+    if (set.exerciseLog.session.completedAt) {
+      throw new BadRequestException('Cannot modify a completed session');
+    }
+
     if (set.exerciseLog.sessionId !== sessionId) {
       throw new NotFoundException('Set not found in this session');
     }
@@ -467,6 +504,19 @@ export class SessionsService {
   }
 
   async getLastSessionForSplit(userId: string, splitId: string) {
+    const split = await this.prisma.workoutSplit.findUnique({
+      where: { id: splitId },
+      select: { userId: true },
+    });
+
+    if (!split) {
+      throw new NotFoundException('Split not found');
+    }
+
+    if (split.userId !== userId) {
+      throw new ForbiddenException('You do not own this split');
+    }
+
     const session = await this.prisma.workoutSession.findFirst({
       where: {
         userId,

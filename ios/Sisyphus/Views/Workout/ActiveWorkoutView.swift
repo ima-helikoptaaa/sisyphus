@@ -119,7 +119,7 @@ struct ActiveWorkoutView: View {
                 }
             }
         } message: {
-            Text("Complete this workout session with \(viewModel.totalSets) sets logged.")
+            Text("Complete this workout session with \(viewModel.workingSets) working sets logged.")
         }
         .alert("Discard Workout?", isPresented: $showDiscardConfirmation) {
             Button("Cancel", role: .cancel) {}

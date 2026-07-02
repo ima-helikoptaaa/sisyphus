@@ -34,7 +34,7 @@ export class AnalyticsService {
 
     const { currentStreak, longestStreak } = await this.calculateStreak(userId);
 
-    const allSets = await this.prisma.setLog.findMany({
+    const volumeSets = await this.prisma.setLog.findMany({
       where: {
         exerciseLog: {
           session: {
@@ -52,7 +52,7 @@ export class AnalyticsService {
       },
     });
 
-    const totalVolume = allSets.reduce((sum, set) => {
+    const totalVolume = volumeSets.reduce((sum, set) => {
       return sum + (set.weight || 0) * (set.reps || 0);
     }, 0);
 
@@ -204,7 +204,8 @@ export class AnalyticsService {
 
     if (days) {
       const sinceDate = new Date();
-      sinceDate.setDate(sinceDate.getDate() - days);
+      sinceDate.setUTCDate(sinceDate.getUTCDate() - days);
+      sinceDate.setUTCHours(0, 0, 0, 0);
       sessionFilter.date = { gte: sinceDate };
     }
 

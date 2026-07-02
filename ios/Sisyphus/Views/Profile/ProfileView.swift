@@ -15,6 +15,28 @@ struct ProfileView: View {
                     // Profile header
                     profileHeader
 
+                    // Error state
+                    if let error = analyticsViewModel.errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(SisyphusTheme.destructive)
+                            Text(error)
+                                .font(.system(size: 13))
+                                .foregroundColor(SisyphusTheme.destructive)
+                                .lineLimit(2)
+                            Spacer()
+                            Button("Retry") {
+                                Task { await analyticsViewModel.loadSummary() }
+                            }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(SisyphusTheme.accent)
+                        }
+                        .padding(12)
+                        .background(SisyphusTheme.destructive.opacity(0.1))
+                        .cornerRadius(SisyphusTheme.smallRadius)
+                    }
+
                     // Quick stats
                     quickStats
 
@@ -41,6 +63,9 @@ struct ProfileView: View {
         }
         .task {
             await analyticsViewModel.loadSummary()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dataChanged)) { _ in
+            Task { await analyticsViewModel.loadSummary() }
         }
     }
 

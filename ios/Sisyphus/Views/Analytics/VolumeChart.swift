@@ -4,6 +4,20 @@ import Charts
 struct VolumeChart: View {
     let data: [DayCount]
 
+    private static let dateParser: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter
+    }()
+
+    private var chartData: [(date: Date, count: Int)] {
+        data.compactMap { item in
+            guard let date = Self.dateParser.date(from: item.date) else { return nil }
+            return (date: date, count: item.count)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Workout Frequency")
@@ -21,7 +35,7 @@ struct VolumeChart: View {
                     }
                     .frame(height: 160)
                 } else {
-                    Chart(data) { item in
+                    Chart(chartData, id: \.date) { item in
                         BarMark(
                             x: .value("Date", item.date, unit: .day),
                             y: .value("Count", item.count)
@@ -34,14 +48,12 @@ struct VolumeChart: View {
                         .cornerRadius(3)
                     }
                     .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: 7)) { value in
+                        AxisMarks(values: .stride(by: .day, count: 7)) { _ in
                             AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
                                 .foregroundStyle(SisyphusTheme.cardBorder)
-                            if let dateStr = value.as(String.self) {
-                                AxisValueLabel(formatDateLabel(dateStr))
-                                    .foregroundStyle(SisyphusTheme.textTertiary)
-                                    .font(.system(size: 10))
-                            }
+                            AxisValueLabel(format: .dateTime.day().month())
+                                .foregroundStyle(SisyphusTheme.textTertiary)
+                                .font(.system(size: 10))
                         }
                     }
                     .chartYAxis {
@@ -58,16 +70,6 @@ struct VolumeChart: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Workout frequency chart, \(data.count) days with \(data.reduce(0) { $0 + $1.count }) total workouts")
-    }
-
-    private func formatDateLabel(_ dateStr: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        guard let date = formatter.date(from: dateStr) else { return dateStr }
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "d/M"
-        return displayFormatter.string(from: date)
     }
 }
 
