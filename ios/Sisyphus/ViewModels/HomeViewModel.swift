@@ -49,21 +49,33 @@ final class HomeViewModel: ObservableObject {
         async let activeTask = sessionService.getActiveSession()
         async let summaryTask = analyticsService.getSummary()
 
-        do {
-            let fetchedSplits = try await splitsTask
-            let fetchedToday = try await todayTask
-            let fetchedActive = try? await activeTask
-            let fetchedSummary = try? await summaryTask
+        let fetchedSplits: [WorkoutSplit]
+        let fetchedToday: [WorkoutSession]
+        let fetchedActive: WorkoutSession?
+        let fetchedSummary: AnalyticsSummary?
 
-            splits = fetchedSplits
-            todaySessions = fetchedToday
-            activeSession = fetchedActive
-            streak = fetchedSummary?.currentStreak ?? 0
-            isLoading = false
+        do {
+            fetchedSplits = try await splitsTask
         } catch {
+            fetchedSplits = splits
             errorMessage = error.localizedDescription
-            isLoading = false
         }
+
+        do {
+            fetchedToday = try await todayTask
+        } catch {
+            fetchedToday = todaySessions
+            if errorMessage == nil { errorMessage = error.localizedDescription }
+        }
+
+        fetchedActive = try? await activeTask
+        fetchedSummary = try? await summaryTask
+
+        splits = fetchedSplits
+        todaySessions = fetchedToday
+        activeSession = fetchedActive
+        streak = fetchedSummary?.currentStreak ?? 0
+        isLoading = false
     }
 
     func startWorkout(splitId: String) async -> WorkoutSession? {

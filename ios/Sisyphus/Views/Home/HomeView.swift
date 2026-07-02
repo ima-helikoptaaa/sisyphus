@@ -13,6 +13,34 @@ struct HomeView: View {
                     // Header
                     headerSection
 
+                    // Error banner
+                    if let error = viewModel.errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(SisyphusTheme.destructive)
+                            Text(error)
+                                .font(.system(size: 13))
+                                .foregroundColor(SisyphusTheme.destructive)
+                                .lineLimit(2)
+                            Spacer()
+                            Button("Retry") {
+                                Task { await viewModel.loadData() }
+                            }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(SisyphusTheme.accent)
+                            Button(action: { viewModel.errorMessage = nil }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(SisyphusTheme.textTertiary)
+                            }
+                        }
+                        .padding(12)
+                        .background(SisyphusTheme.destructive.opacity(0.1))
+                        .cornerRadius(SisyphusTheme.smallRadius)
+                        .transition(.opacity)
+                    }
+
                     // Active Workout Banner
                     if workoutViewModel.isActive {
                         ActiveWorkoutBanner {
@@ -58,6 +86,7 @@ struct HomeView: View {
                 let error = await splitVM.createSplit(name: name, emoji: emoji, color: color)
                 if error == nil {
                     await viewModel.loadData()
+                    NotificationCenter.default.post(name: .dataChanged, object: nil)
                 }
                 return error
             }
@@ -76,7 +105,11 @@ struct HomeView: View {
                 await workoutViewModel.resumeWorkout(session: activeSession)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .dataChanged)) { _ in
+            Task { await viewModel.loadData() }
+        }
         .animation(.spring(response: 0.4), value: workoutViewModel.isActive)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage != nil)
     }
 
     // MARK: - Header

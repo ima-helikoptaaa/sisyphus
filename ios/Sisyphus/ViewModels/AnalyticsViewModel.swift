@@ -33,19 +33,35 @@ final class AnalyticsViewModel: ObservableObject {
         async let prsTask = analyticsService.getPersonalRecords()
         async let volumeTask = analyticsService.getVolumeByDay(days: 30)
 
-        do {
-            let fetchedSummary = try await summaryTask
-            let fetchedPRs = try await prsTask
-            let fetchedVolume = try await volumeTask
+        let fetchedSummary: AnalyticsSummary?
+        let fetchedPRs: [PersonalRecord]
+        let fetchedVolume: [DayCount]
 
-            summary = fetchedSummary
-            personalRecords = fetchedPRs
-            volumeByDay = fetchedVolume
-            isLoading = false
+        do {
+            fetchedSummary = try await summaryTask
         } catch {
+            fetchedSummary = summary
             errorMessage = error.localizedDescription
-            isLoading = false
         }
+
+        do {
+            fetchedPRs = try await prsTask
+        } catch {
+            fetchedPRs = personalRecords
+            if errorMessage == nil { errorMessage = error.localizedDescription }
+        }
+
+        do {
+            fetchedVolume = try await volumeTask
+        } catch {
+            fetchedVolume = volumeByDay
+            if errorMessage == nil { errorMessage = error.localizedDescription }
+        }
+
+        summary = fetchedSummary
+        personalRecords = fetchedPRs
+        volumeByDay = fetchedVolume
+        isLoading = false
     }
 
     func loadExerciseProgress(exerciseId: String) async {

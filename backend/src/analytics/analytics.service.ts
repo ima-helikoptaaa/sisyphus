@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -138,8 +138,7 @@ export class AnalyticsService {
     const sessionDates = new Set(
       sessions.map((s) => {
         const d = new Date(s.date);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime();
+        return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
       }),
     );
 
@@ -158,16 +157,16 @@ export class AnalyticsService {
       }
     }
 
-    // Calculate current streak
+    // Calculate current streak using UTC
     let currentStreak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
-    let checkDate = new Date(today);
+    let checkDate = todayUtc;
 
     const mostRecentDate = sortedDates[0];
     const diffFromToday = Math.floor(
-      (today.getTime() - mostRecentDate) / (1000 * 60 * 60 * 24),
+      (todayUtc - mostRecentDate) / (1000 * 60 * 60 * 24),
     );
 
     if (diffFromToday > 1) {
@@ -175,12 +174,12 @@ export class AnalyticsService {
     }
 
     if (diffFromToday === 1) {
-      checkDate.setDate(checkDate.getDate() - 1);
+      checkDate = todayUtc - 24 * 60 * 60 * 1000;
     }
 
-    while (sessionDates.has(checkDate.getTime())) {
+    while (sessionDates.has(checkDate)) {
       currentStreak++;
-      checkDate.setDate(checkDate.getDate() - 1);
+      checkDate -= 24 * 60 * 60 * 1000;
     }
 
     longestStreak = Math.max(longestStreak, currentStreak);
@@ -189,6 +188,15 @@ export class AnalyticsService {
   }
 
   async getExerciseProgress(userId: string, exerciseId: string, days?: number) {
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id: exerciseId },
+      include: { split: { select: { userId: true } } },
+    });
+
+    if (!exercise || exercise.split.userId !== userId) {
+      throw new NotFoundException('Exercise not found');
+    }
+
     const sessionFilter: { userId: string; completedAt: { not: null }; date?: { gte: Date } } = {
       userId,
       completedAt: { not: null },
@@ -216,9 +224,10 @@ export class AnalyticsService {
           orderBy: { setNumber: 'asc' },
         },
       },
-      orderBy: {
-        session: { date: 'asc' },
-      },
+      orderBy: [
+        { session: { date: 'asc' } },
+        { createdAt: 'asc' },
+      ],
     });
 
     return logs.map((log) => {
@@ -249,8 +258,8 @@ export class AnalyticsService {
 
   async getVolumeByDay(userId: string, days: number) {
     const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - days);
-    sinceDate.setHours(0, 0, 0, 0);
+    sinceDate.setUTCDate(sinceDate.getUTCDate() - days);
+    sinceDate.setUTCHours(0, 0, 0, 0);
 
     const sessions = await this.prisma.workoutSession.findMany({
       where: {
@@ -267,7 +276,8 @@ export class AnalyticsService {
     const countByDay: Record<string, number> = {};
 
     for (const session of sessions) {
-      const dateKey = new Date(session.date).toISOString().split('T')[0];
+      const d = new Date(session.date);
+      const dateKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
       countByDay[dateKey] = (countByDay[dateKey] || 0) + 1;
     }
 
@@ -359,11 +369,12 @@ export class AnalyticsService {
       let key: string;
 
       if (groupBy === 'week') {
+        const dayOfWeek = date.getUTCDay();
         const startOfWeek = new Date(date);
-        startOfWeek.setDate(date.getDate() - date.getDay());
-        key = startOfWeek.toISOString().split('T')[0];
+        startOfWeek.setUTCDate(date.getUTCDate() - dayOfWeek);
+        key = `${startOfWeek.getUTCFullYear()}-${String(startOfWeek.getUTCMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getUTCDate()).padStart(2, '0')}`;
       } else {
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
       }
 
       grouped[key] = (grouped[key] || 0) + 1;

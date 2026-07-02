@@ -6,6 +6,7 @@ final class DailyLogViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isSaving = false
     @Published var errorMessage: String?
+    @Published var showSavedConfirmation = false
 
     // Input fields
     @Published var weightInput: String = ""
@@ -51,6 +52,10 @@ final class DailyLogViewModel: ObservableObject {
         do {
             todayLog = try await service.upsert(request)
             populateFromLog()
+            showSavedConfirmation = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                self?.showSavedConfirmation = false
+            }
         } catch {
             errorMessage = error.localizedDescription
         }

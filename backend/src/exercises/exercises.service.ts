@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
@@ -104,6 +105,16 @@ export class ExercisesService {
 
     if (exercise.splitId !== splitId) {
       throw new NotFoundException('Exercise not found in this split');
+    }
+
+    const logCount = await this.prisma.exerciseLog.count({
+      where: { exerciseId },
+    });
+
+    if (logCount > 0) {
+      throw new ConflictException(
+        `Cannot delete an exercise with ${logCount} workout log${logCount === 1 ? '' : 's'}. Consider deactivating it instead.`,
+      );
     }
 
     await this.prisma.exercise.delete({

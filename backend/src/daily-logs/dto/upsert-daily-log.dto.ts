@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString, Min, Max, MaxLength } from 'class-validator';
 
 export class UpsertDailyLogDto {
-  @IsString()
+  @IsDateString()
   date: string;
 
   @IsOptional()
@@ -36,5 +36,6 @@ export class UpsertDailyLogDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 }

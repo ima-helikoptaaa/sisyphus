@@ -80,6 +80,8 @@ final class WorkoutViewModel: ObservableObject {
 
         startElapsedTimer()
 
+        await loadSessionDetail()
+
         if let splitId = currentSession?.splitId {
             await loadPreviousSession(splitId: splitId, sessionId: session.id)
         }
@@ -174,6 +176,17 @@ final class WorkoutViewModel: ObservableObject {
             )
             if let logIndex = exerciseLogs.firstIndex(where: { $0.id == exerciseLogId }) {
                 exerciseLogs[logIndex].sets?.removeAll { $0.id == setId }
+                for (index, set) in (exerciseLogs[logIndex].sets ?? []).enumerated() {
+                    let expectedNumber = index + 1
+                    if set.setNumber != expectedNumber {
+                        let update = UpdateSetLogRequest(setNumber: expectedNumber, weight: nil, reps: nil, durationSecs: nil, rpe: nil, isWarmup: nil, isDropset: nil)
+                        if let updated = try? await sessionService.updateSetLog(
+                            sessionId: sessionId, exerciseLogId: exerciseLogId, setId: set.id, update: update
+                        ) {
+                            exerciseLogs[logIndex].sets?[index] = updated
+                        }
+                    }
+                }
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -212,6 +225,7 @@ final class WorkoutViewModel: ObservableObject {
             stopElapsedTimer()
             stopRestTimer()
             triggerHaptic(.heavy)
+            NotificationCenter.default.post(name: .dataChanged, object: nil)
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -231,6 +245,7 @@ final class WorkoutViewModel: ObservableObject {
             elapsedSeconds = 0
             stopElapsedTimer()
             stopRestTimer()
+            NotificationCenter.default.post(name: .dataChanged, object: nil)
             return true
         } catch {
             errorMessage = error.localizedDescription

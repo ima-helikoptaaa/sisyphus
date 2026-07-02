@@ -92,14 +92,19 @@ struct SplitDetailView: View {
                     Image(systemName: "plus")
                         .foregroundColor(SisyphusTheme.accent)
                 }
+                .accessibilityLabel("Add exercise")
             }
         }
         .sheet(isPresented: $showingAddExercise) {
             AddExerciseSheet { name, muscleGroup, exerciseType, notes in
-                await viewModel.createExercise(
+                let success = await viewModel.createExercise(
                     splitId: splitId, name: name, muscleGroup: muscleGroup,
                     exerciseType: exerciseType, notes: notes
                 )
+                if success {
+                    NotificationCenter.default.post(name: .dataChanged, object: nil)
+                }
+                return success
             }
             .presentationDetents([.large])
         }
@@ -107,10 +112,18 @@ struct SplitDetailView: View {
             EditExerciseSheet(
                 exercise: exercise,
                 onSave: { update in
-                    await viewModel.updateExercise(splitId: splitId, exerciseId: exercise.id, update: update)
+                    let success = await viewModel.updateExercise(splitId: splitId, exerciseId: exercise.id, update: update)
+                    if success {
+                        NotificationCenter.default.post(name: .dataChanged, object: nil)
+                    }
+                    return success
                 },
                 onDelete: {
-                    await viewModel.deleteExercise(splitId: splitId, exerciseId: exercise.id)
+                    let success = await viewModel.deleteExercise(splitId: splitId, exerciseId: exercise.id)
+                    if success {
+                        NotificationCenter.default.post(name: .dataChanged, object: nil)
+                    }
+                    return success
                 }
             )
             .presentationDetents([.large])

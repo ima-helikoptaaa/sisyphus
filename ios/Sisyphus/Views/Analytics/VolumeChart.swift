@@ -23,7 +23,7 @@ struct VolumeChart: View {
                 } else {
                     Chart(data) { item in
                         BarMark(
-                            x: .value("Date", item.date),
+                            x: .value("Date", item.date, unit: .day),
                             y: .value("Count", item.count)
                         )
                         .foregroundStyle(
@@ -34,10 +34,14 @@ struct VolumeChart: View {
                         .cornerRadius(3)
                     }
                     .chartXAxis {
-                        AxisMarks(values: .automatic(desiredCount: 7)) { _ in
-                            AxisValueLabel()
-                                .foregroundStyle(SisyphusTheme.textTertiary)
-                                .font(.system(size: 10))
+                        AxisMarks(values: .stride(by: .day, count: 7)) { value in
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                                .foregroundStyle(SisyphusTheme.cardBorder)
+                            if let dateStr = value.as(String.self) {
+                                AxisValueLabel(formatDateLabel(dateStr))
+                                    .foregroundStyle(SisyphusTheme.textTertiary)
+                                    .font(.system(size: 10))
+                            }
                         }
                     }
                     .chartYAxis {
@@ -54,6 +58,16 @@ struct VolumeChart: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Workout frequency chart, \(data.count) days with \(data.reduce(0) { $0 + $1.count }) total workouts")
+    }
+
+    private func formatDateLabel(_ dateStr: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        guard let date = formatter.date(from: dateStr) else { return dateStr }
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "d/M"
+        return displayFormatter.string(from: date)
     }
 }
 

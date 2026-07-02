@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpsertDailyLogDto } from './dto/upsert-daily-log.dto';
 
@@ -63,8 +63,18 @@ export class DailyLogsService {
   }
 
   async delete(userId: string, id: string) {
-    return this.prisma.dailyLog.deleteMany({
-      where: { id, userId },
+    const log = await this.prisma.dailyLog.findUnique({
+      where: { id },
     });
+
+    if (!log || log.userId !== userId) {
+      throw new NotFoundException('Daily log not found');
+    }
+
+    await this.prisma.dailyLog.delete({
+      where: { id },
+    });
+
+    return { deleted: true };
   }
 }

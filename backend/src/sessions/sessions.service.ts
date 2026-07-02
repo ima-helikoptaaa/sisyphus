@@ -47,7 +47,7 @@ export class SessionsService {
       limit?: number;
     },
   ) {
-    const where: { userId: string; splitId?: string; date?: { gte?: Date; lte?: Date } } = { userId };
+    const where: { userId: string; splitId?: string; date?: { gte?: Date; lt?: Date } } = { userId };
 
     if (filters.splitId) {
       where.splitId = filters.splitId;
@@ -64,7 +64,7 @@ export class SessionsService {
       if (filters.endDate) {
         const endDate = new Date(filters.endDate);
         if (!isNaN(endDate.getTime())) {
-          where.date.lte = endDate;
+          where.date.lt = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
         }
       }
     }
@@ -84,10 +84,25 @@ export class SessionsService {
     });
   }
 
-  async findToday(userId: string) {
-    const now = new Date();
-    const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  async findToday(userId: string, dateParam?: string) {
+    let startOfDay: Date;
+    let endOfDay: Date;
+
+    if (dateParam) {
+      const parsed = new Date(dateParam);
+      if (!isNaN(parsed.getTime())) {
+        startOfDay = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()));
+        endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+      } else {
+        const now = new Date();
+        startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+      }
+    } else {
+      const now = new Date();
+      startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+    }
 
     return this.prisma.workoutSession.findMany({
       where: {
@@ -177,12 +192,16 @@ export class SessionsService {
     }
 
     const sessionDate = dto.date ? new Date(dto.date) : new Date();
+    if (isNaN(sessionDate.getTime())) {
+      throw new Error('Invalid date');
+    }
+    const dateOnly = new Date(Date.UTC(sessionDate.getUTCFullYear(), sessionDate.getUTCMonth(), sessionDate.getUTCDate()));
 
     return this.prisma.workoutSession.create({
       data: {
         userId,
         splitId: dto.splitId,
-        date: sessionDate,
+        date: dateOnly,
         notes: dto.notes,
         exerciseLogs: {
           create: split.exercises.map((exercise, index) => ({
@@ -206,6 +225,13 @@ export class SessionsService {
 
     if (session.userId !== userId) {
       throw new ForbiddenException('You do not own this session');
+    }
+
+    if (session.completedAt) {
+      return this.prisma.workoutSession.findUnique({
+        where: { id: sessionId },
+        include: this.sessionInclude,
+      });
     }
 
     return this.prisma.workoutSession.update({
@@ -242,6 +268,7 @@ export class SessionsService {
   ) {
     const session = await this.prisma.workoutSession.findUnique({
       where: { id: sessionId },
+      include: { split: { select: { id: true } } },
     });
 
     if (!session) {
@@ -250,6 +277,19 @@ export class SessionsService {
 
     if (session.userId !== userId) {
       throw new ForbiddenException('You do not own this session');
+    }
+
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id: dto.exerciseId },
+      include: { split: { select: { id: true } } },
+    });
+
+    if (!exercise) {
+      throw new NotFoundException('Exercise not found');
+    }
+
+    if (exercise.split.id !== session.split.id) {
+      throw new NotFoundException('Exercise not found in this split');
     }
 
     return this.prisma.exerciseLog.create({
@@ -344,7 +384,7 @@ export class SessionsService {
     });
   }
 
-  async updateSet(userId: string, setId: string, dto: UpdateSetDto) {
+  async updateSet(userId: string, sessionId: string, exerciseLogId: string, setId: string, dto: UpdateSetDto) {
     const set = await this.prisma.setLog.findUnique({
       where: { id: setId },
       include: {
@@ -362,6 +402,14 @@ export class SessionsService {
 
     if (set.exerciseLog.session.userId !== userId) {
       throw new ForbiddenException('You do not own this set');
+    }
+
+    if (set.exerciseLog.sessionId !== sessionId) {
+      throw new NotFoundException('Set not found in this session');
+    }
+
+    if (set.exerciseLogId !== exerciseLogId) {
+      throw new NotFoundException('Set not found in this exercise log');
     }
 
     const data: Partial<{
@@ -383,7 +431,7 @@ export class SessionsService {
     });
   }
 
-  async deleteSet(userId: string, setId: string) {
+  async deleteSet(userId: string, sessionId: string, exerciseLogId: string, setId: string) {
     const set = await this.prisma.setLog.findUnique({
       where: { id: setId },
       include: {
@@ -401,6 +449,14 @@ export class SessionsService {
 
     if (set.exerciseLog.session.userId !== userId) {
       throw new ForbiddenException('You do not own this set');
+    }
+
+    if (set.exerciseLog.sessionId !== sessionId) {
+      throw new NotFoundException('Set not found in this session');
+    }
+
+    if (set.exerciseLogId !== exerciseLogId) {
+      throw new NotFoundException('Set not found in this exercise log');
     }
 
     await this.prisma.setLog.delete({

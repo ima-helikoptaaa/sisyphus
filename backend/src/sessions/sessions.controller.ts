@@ -23,8 +23,11 @@ export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Get('today')
-  async findToday(@CurrentUser() user: User) {
-    return this.sessionsService.findToday(user.id);
+  async findToday(
+    @CurrentUser() user: User,
+    @Query('date') date?: string,
+  ) {
+    return this.sessionsService.findToday(user.id, date);
   }
 
   @Get('active')
@@ -122,7 +125,7 @@ export class SessionsController {
     @Param('setId') setId: string,
     @Body() dto: UpdateSetDto,
   ) {
-    return this.sessionsService.updateSet(user.id, setId, dto);
+    return this.sessionsService.updateSet(user.id, sessionId, exerciseLogId, setId, dto);
   }
 
   @Delete(':sessionId/exercises/:exerciseLogId/sets/:setId')
@@ -132,6 +135,6 @@ export class SessionsController {
     @Param('exerciseLogId') exerciseLogId: string,
     @Param('setId') setId: string,
   ) {
-    return this.sessionsService.deleteSet(user.id, setId);
+    return this.sessionsService.deleteSet(user.id, sessionId, exerciseLogId, setId);
   }
 }

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSplitDto } from './dto/create-split.dto';
@@ -108,6 +109,16 @@ export class SplitsService {
 
     if (split.userId !== userId) {
       throw new ForbiddenException('You do not own this split');
+    }
+
+    const sessionCount = await this.prisma.workoutSession.count({
+      where: { splitId },
+    });
+
+    if (sessionCount > 0) {
+      throw new ConflictException(
+        `Cannot delete a split with ${sessionCount} workout session${sessionCount === 1 ? '' : 's'}. Consider deactivating it instead.`,
+      );
     }
 
     await this.prisma.workoutSplit.delete({

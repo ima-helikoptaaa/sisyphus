@@ -2,6 +2,7 @@ import Foundation
 
 extension Notification.Name {
     static let unauthorizedResponse = Notification.Name("unauthorizedResponse")
+    static let dataChanged = Notification.Name("dataChanged")
 }
 
 enum APIError: LocalizedError {

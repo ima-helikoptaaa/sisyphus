@@ -90,7 +90,6 @@ struct StreakView: View {
         let workoutLookup = Dictionary(uniqueKeysWithValues: workoutsByDay.map { ($0.date, $0.count) })
 
         // Find the Monday that starts our 4-week grid ending on the current week's Sunday
-        // First, find the Monday of the current week
         let weekday = calendar.component(.weekday, from: today) // 1=Sun, 2=Mon...
         let daysFromMonday = (weekday + 5) % 7 // how many days since Monday
         let thisMonday = calendar.date(byAdding: .day, value: -daysFromMonday, to: today)!

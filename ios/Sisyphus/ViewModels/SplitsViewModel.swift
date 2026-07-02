@@ -48,6 +48,7 @@ final class SplitsViewModel: ObservableObject {
         do {
             let split = try await splitService.createSplit(name: name, emoji: emoji, color: color)
             splits.append(split)
+            splits.sort { $0.sortOrder < $1.sortOrder }
             return nil
         } catch {
             print("Create split error: \(error)")

@@ -31,6 +31,7 @@ final class AuthViewModel: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
+                guard self?.isAuthenticated == true else { return }
                 self?.signOut()
             }
         }

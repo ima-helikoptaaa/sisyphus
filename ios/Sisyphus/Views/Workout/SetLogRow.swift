@@ -78,13 +78,6 @@ struct SetLogRow: View {
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
         .contextMenu {
             Button(role: .destructive) {
                 onDelete()

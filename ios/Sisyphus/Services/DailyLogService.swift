@@ -32,6 +32,14 @@ final class DailyLogService {
     }
 
     func getHistory(days: Int = 30) async throws -> [DailyLog] {
-        try await api.get(path: "/api/daily-logs?days=\(days)")
+        let calendar = Calendar.current
+        let end = calendar.startOfDay(for: Date())
+        let start = calendar.date(byAdding: .day, value: -days, to: end)!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        let startStr = formatter.string(from: start)
+        let endStr = formatter.string(from: end)
+        return try await api.get(path: "/api/daily-logs?startDate=\(startStr)&endDate=\(endStr)")
     }
 }

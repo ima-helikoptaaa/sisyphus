@@ -6,13 +6,12 @@ final class SessionService {
 
     private init() {}
 
-    func getSessions(limit: Int = 20, offset: Int = 0) async throws -> [WorkoutSession] {
-        try await api.get(path: "/api/sessions?limit=\(limit)&offset=\(offset)")
+    func getSessions(limit: Int = 20) async throws -> [WorkoutSession] {
+        try await api.get(path: "/api/sessions?limit=\(limit)")
     }
 
     func getTodaySessions() async throws -> [WorkoutSession] {
-        let today = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withFullDate])
-        return try await api.get(path: "/api/sessions?startDate=\(today)&endDate=\(today)")
+        try await api.get(path: "/api/sessions/today")
     }
 
     func getSession(id: String) async throws -> WorkoutSession {
@@ -38,7 +37,7 @@ final class SessionService {
     }
 
     func getPreviousSession(splitId: String, beforeSessionId: String) async throws -> WorkoutSession {
-        try await api.get(path: "/api/sessions/last/\(splitId)?before_session_id=\(beforeSessionId)")
+        try await api.get(path: "/api/sessions/last/\(splitId)")
     }
 
     // Exercise Logs

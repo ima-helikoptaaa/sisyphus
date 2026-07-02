@@ -10,6 +10,33 @@ struct AnalyticsDashboardView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    // Error banner
+                    if let error = viewModel.errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(SisyphusTheme.destructive)
+                            Text(error)
+                                .font(.system(size: 13))
+                                .foregroundColor(SisyphusTheme.destructive)
+                                .lineLimit(2)
+                            Spacer()
+                            Button("Retry") {
+                                Task { await viewModel.loadAllData() }
+                            }
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(SisyphusTheme.accent)
+                            Button(action: { viewModel.errorMessage = nil }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(SisyphusTheme.textTertiary)
+                            }
+                        }
+                        .padding(12)
+                        .background(SisyphusTheme.destructive.opacity(0.1))
+                        .cornerRadius(SisyphusTheme.smallRadius)
+                    }
+
                     // Summary cards
                     summaryGrid
 

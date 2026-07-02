@@ -11,23 +11,14 @@ export class AuthService {
     displayName: string | null,
     avatarUrl: string | null,
   ) {
-    const existingUser = await this.prisma.user.findUnique({
+    return this.prisma.user.upsert({
       where: { firebaseUid },
-    });
-
-    if (existingUser) {
-      return this.prisma.user.update({
-        where: { id: existingUser.id },
-        data: {
-          email,
-          displayName,
-          avatarUrl,
-        },
-      });
-    }
-
-    return this.prisma.user.create({
-      data: {
+      update: {
+        email,
+        displayName,
+        avatarUrl,
+      },
+      create: {
         firebaseUid,
         email,
         displayName,

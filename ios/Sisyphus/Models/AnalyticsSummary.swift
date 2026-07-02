@@ -33,7 +33,7 @@ struct ExerciseProgressPoint: Codable, Identifiable {
 
 struct PersonalRecord: Codable, Identifiable {
     let exerciseId: String
-    let exerciseName: String
+    let exerciseName: String?
     let bestWeight: Double?
     let bestWeightDate: Date?
     let bestVolume: Double?

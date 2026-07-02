@@ -210,8 +210,8 @@ struct EditExerciseSheet: View {
                                 .font(.system(size: 16, weight: .semibold))
                         }
                     }
-                    .foregroundColor(name.isEmpty ? SisyphusTheme.textTertiary : SisyphusTheme.accent)
-                    .disabled(name.isEmpty || isSaving)
+                    .foregroundColor(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? SisyphusTheme.textTertiary : SisyphusTheme.accent)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
             }
             .alert("Delete Exercise?", isPresented: $showDeleteConfirmation) {

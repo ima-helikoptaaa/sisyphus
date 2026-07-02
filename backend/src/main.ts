@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,8 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -26,9 +29,10 @@ async function bootstrap() {
     }),
   );
 
+  app.enableShutdownHooks();
+
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
-  const { Logger } = require('@nestjs/common');
   new Logger('Bootstrap').log(`Sisyphus backend running on port ${port}`);
 }
 

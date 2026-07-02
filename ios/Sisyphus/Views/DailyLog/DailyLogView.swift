@@ -108,23 +108,30 @@ struct DailyLogView: View {
                     // Save button
                     Button(action: {
                         focusedField = nil
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
                         Task { await viewModel.save() }
                     }) {
                         HStack(spacing: 8) {
                             if viewModel.isSaving {
                                 ProgressView()
                                     .tint(.black)
+                            } else if viewModel.showSavedConfirmation {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.black)
                             }
-                            Text(viewModel.todayLog != nil ? "Update" : "Save")
+                            Text(viewModel.showSavedConfirmation ? "Saved!" : (viewModel.todayLog != nil ? "Update" : "Save"))
                                 .font(.system(size: 16, weight: .bold))
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(SisyphusTheme.accent)
+                        .background(viewModel.showSavedConfirmation ? SisyphusTheme.success : SisyphusTheme.accent)
                         .foregroundColor(.black)
                         .cornerRadius(SisyphusTheme.buttonRadius)
                     }
                     .disabled(viewModel.isSaving)
+                    .animation(.easeInOut(duration: 0.25), value: viewModel.showSavedConfirmation)
 
                     if let error = viewModel.errorMessage {
                         Text(error)

@@ -29,7 +29,7 @@ struct PersonalRecordsView: View {
                         }) {
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(record.exerciseName)
+                                    Text(record.exerciseName ?? "Unknown Exercise")
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(SisyphusTheme.textPrimary)
                                         .lineLimit(1)

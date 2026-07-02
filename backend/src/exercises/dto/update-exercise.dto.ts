@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsIn, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsIn, IsInt, Min, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateExerciseDto {
   @IsOptional()
@@ -21,6 +21,11 @@ export class UpdateExerciseDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 
   @IsOptional()
   @IsBoolean()

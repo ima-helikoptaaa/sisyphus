@@ -66,11 +66,16 @@ struct SplitsListView: View {
                     Image(systemName: "plus.circle.fill")
                         .foregroundColor(SisyphusTheme.accent)
                 }
+                .accessibilityLabel("New split")
             }
         }
         .sheet(isPresented: $showingAddSplit) {
             AddSplitSheet { name, emoji, color in
-                return await viewModel.createSplit(name: name, emoji: emoji, color: color)
+                let error = await viewModel.createSplit(name: name, emoji: emoji, color: color)
+                if error == nil {
+                    NotificationCenter.default.post(name: .dataChanged, object: nil)
+                }
+                return error
             }
             .presentationDetents([.medium])
         }
@@ -79,7 +84,10 @@ struct SplitsListView: View {
             Button("Delete", role: .destructive) {
                 if let split = splitToDelete {
                     Task {
-                        _ = await viewModel.deleteSplit(id: split.id)
+                        let success = await viewModel.deleteSplit(id: split.id)
+                        if success {
+                            NotificationCenter.default.post(name: .dataChanged, object: nil)
+                        }
                     }
                 }
             }
